@@ -1,6 +1,6 @@
 {
 	"name": "aw_litelement",
-	"version": "1.0.0",
+	"version": "1.0.2",
 	"description": "Biblioteca Lit ELement preparada para trabajar sin empaquetadores en navegadores compatibles con Web Components y Shadow DOM.",
 	"keywords": [
 		"Lit ELement",
