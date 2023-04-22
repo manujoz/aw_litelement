@@ -1,7 +1,7 @@
-import { ReactiveElement as t } from "@lit/reactive-element";
-export * from "@lit/reactive-element";
-import { render as e, noChange as i } from "lit-html";
-export * from "lit-html";
+import { ReactiveElement as t } from "../@lit/reactive-element/reactive-element.js";
+export * from "../@lit/reactive-element/reactive-element.js";
+import { render as e, noChange as i } from "../lit-html/lit-html.js";
+export * from "../lit-html/lit-html.js";
 /**
  * @license
  * Copyright 2017 Google LLC
