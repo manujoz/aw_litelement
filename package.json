@@ -1,16 +1,15 @@
 {
-	"name": "aw_litelement",
-	"version": "1.0.2",
-	"description": "Biblioteca Lit ELement preparada para trabajar sin empaquetadores en navegadores compatibles con Web Components y Shadow DOM.",
-	"keywords": [
-		"Lit ELement",
-		"Web Components"
-	],
-	"repository": {
-		"type" : "git",
-  		"url" : "https://github.com/manujoz/aw_litelement.git"
-	},
-	"author": "The Lit Element Project Authors",
-	"license": "ISC"
-  }
-  
+    "name": "aw_litelement",
+    "version": "1.1.0",
+    "description": "Biblioteca Lit ELement preparada para trabajar sin empaquetadores en navegadores compatibles con Web Components y Shadow DOM.",
+    "keywords": [
+        "Lit ELement",
+        "Web Components"
+    ],
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/manujoz/aw_litelement.git"
+    },
+    "author": "The Lit Element Project Authors",
+    "license": "ISC"
+}
