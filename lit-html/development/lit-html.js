@@ -100,7 +100,7 @@ const markerMatch = '?' + marker;
 // Text used to insert a comment marker node. We use processing instruction
 // syntax because it's slightly smaller, but parses as a comment node.
 const nodeMarker = `<${markerMatch}>`;
-const d = NODE_MODE
+const d = NODE_MODE && global.document === undefined
     ? {
         createTreeWalker() {
             return {};
@@ -108,7 +108,7 @@ const d = NODE_MODE
     }
     : document;
 // Creates a dynamic marker. We never have to search for these in the DOM.
-const createMarker = (v = '') => d.createComment(v);
+const createMarker = () => d.createComment('');
 const isPrimitive = (value) => value === null || (typeof value != 'object' && typeof value != 'function');
 const isArray = Array.isArray;
 const isIterable = (value) => isArray(value) ||
@@ -277,78 +277,6 @@ export const nothing = Symbol.for('lit-nothing');
  * path for rendering.
  */
 const templateCache = new WeakMap();
-/**
- * Renders a value, usually a lit-html TemplateResult, to the container.
- *
- * This example renders the text "Hello, Zoe!" inside a paragraph tag, appending
- * it to the container `document.body`.
- *
- * ```js
- * import {html, render} from 'lit';
- *
- * const name = "Zoe";
- * render(html`<p>Hello, ${name}!</p>`, document.body);
- * ```
- *
- * @param value Any [renderable
- *   value](https://lit.dev/docs/templates/expressions/#child-expressions),
- *   typically a {@linkcode TemplateResult} created by evaluating a template tag
- *   like {@linkcode html} or {@linkcode svg}.
- * @param container A DOM container to render to. The first render will append
- *   the rendered value to the container, and subsequent renders will
- *   efficiently update the rendered value if the same result type was
- *   previously rendered there.
- * @param options See {@linkcode RenderOptions} for options documentation.
- * @see
- * {@link https://lit.dev/docs/libraries/standalone-templates/#rendering-lit-html-templates| Rendering Lit HTML Templates}
- */
-export const render = (value, container, options) => {
-    var _a, _b;
-    if (DEV_MODE && container == null) {
-        // Give a clearer error message than
-        //     Uncaught TypeError: Cannot read properties of null (reading
-        //     '_$litPart$')
-        // which reads like an internal Lit error.
-        throw new TypeError(`The container to render into may not be ${container}`);
-    }
-    const renderId = DEV_MODE ? debugLogRenderId++ : 0;
-    const partOwnerNode = (_a = options === null || options === void 0 ? void 0 : options.renderBefore) !== null && _a !== void 0 ? _a : container;
-    // This property needs to remain unminified.
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let part = partOwnerNode['_$litPart$'];
-    debugLogEvent === null || debugLogEvent === void 0 ? void 0 : debugLogEvent({
-        kind: 'begin render',
-        id: renderId,
-        value,
-        container,
-        options,
-        part,
-    });
-    if (part === undefined) {
-        const endNode = (_b = options === null || options === void 0 ? void 0 : options.renderBefore) !== null && _b !== void 0 ? _b : null;
-        // This property needs to remain unminified.
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        partOwnerNode['_$litPart$'] = part = new ChildPart(container.insertBefore(createMarker(), endNode), endNode, undefined, options !== null && options !== void 0 ? options : {});
-    }
-    part._$setValue(value);
-    debugLogEvent === null || debugLogEvent === void 0 ? void 0 : debugLogEvent({
-        kind: 'end render',
-        id: renderId,
-        value,
-        container,
-        options,
-        part,
-    });
-    return part;
-};
-if (ENABLE_EXTRA_SECURITY_HOOKS) {
-    render.setSanitizer = setSanitizer;
-    render.createSanitizer = createSanitizer;
-    if (DEV_MODE) {
-        render._testOnlyClearSanitizerFactoryDoNotCallOrElse =
-            _testOnlyClearSanitizerFactoryDoNotCallOrElse;
-    }
-}
 const walker = d.createTreeWalker(d, 129 /* NodeFilter.SHOW_{ELEMENT|COMMENT} */, null, false);
 let sanitizerFactoryInternal = noopSanitizer;
 /**
@@ -519,7 +447,7 @@ const getTemplateHtml = (strings, type) => {
           issues, e.g. opening your code up to XSS attacks.
 
           If you're using the html or svg tagged template functions normally
-          and and still seeing this error, please file a bug at
+          and still seeing this error, please file a bug at
           https://github.com/lit/lit/issues/new?template=bug_report.md
           and include information about your build tooling, if any.
         `
@@ -540,7 +468,6 @@ class Template {
     constructor(
     // This property needs to remain unminified.
     { strings, ['_$litType$']: type }, options) {
-        /** @internal */
         this.parts = [];
         let node;
         let nodeIndex = 0;
@@ -589,7 +516,7 @@ class Template {
                     const attrsToRemove = [];
                     for (const name of node.getAttributeNames()) {
                         // `name` is the name of the attribute we're iterating over, but not
-                        // _neccessarily_ the name of the attribute we will create a part
+                        // _necessarily_ the name of the attribute we will create a part
                         // for. They can be different in browsers that don't iterate on
                         // attributes in source order. In that case the attrNames array
                         // contains the attribute name we'll process next. We only need the
@@ -738,8 +665,7 @@ function resolveDirective(part, value, parent = part, attributeIndex) {
  */
 class TemplateInstance {
     constructor(template, parent) {
-        /** @internal */
-        this._parts = [];
+        this._$parts = [];
         /** @internal */
         this._$disconnectableChildren = undefined;
         this._$template = template;
@@ -776,7 +702,7 @@ class TemplateInstance {
                 else if (templatePart.type === ELEMENT_PART) {
                     part = new ElementPart(node, this, options);
                 }
-                this._parts.push(part);
+                this._$parts.push(part);
                 templatePart = parts[++partIndex];
             }
             if (nodeIndex !== (templatePart === null || templatePart === void 0 ? void 0 : templatePart.index)) {
@@ -788,7 +714,7 @@ class TemplateInstance {
     }
     _update(values) {
         let i = 0;
-        for (const part of this._parts) {
+        for (const part of this._$parts) {
             if (part !== undefined) {
                 debugLogEvent === null || debugLogEvent === void 0 ? void 0 : debugLogEvent({
                     kind: 'set part',
@@ -865,7 +791,7 @@ class ChildPart {
         let parentNode = wrap(this._$startNode).parentNode;
         const parent = this._$parent;
         if (parent !== undefined &&
-            parentNode.nodeType === 11 /* Node.DOCUMENT_FRAGMENT */) {
+            (parentNode === null || parentNode === void 0 ? void 0 : parentNode.nodeType) === 11 /* Node.DOCUMENT_FRAGMENT */) {
             // If the parentNode is a DocumentFragment, it may be because the DOM is
             // still in the cloned fragment during initial render; if so, get the real
             // parentNode the part will be committed into by asking the parent.
@@ -935,8 +861,8 @@ class ChildPart {
             this._commitText(value);
         }
     }
-    _insert(node, ref = this._$endNode) {
-        return wrap(wrap(this._$startNode).parentNode).insertBefore(node, ref);
+    _insert(node) {
+        return wrap(wrap(this._$startNode).parentNode).insertBefore(node, this._$endNode);
     }
     _commitNode(value) {
         var _a;
@@ -1001,7 +927,7 @@ class ChildPart {
         }
         else {
             if (ENABLE_EXTRA_SECURITY_HOOKS) {
-                const textNode = document.createTextNode('');
+                const textNode = d.createTextNode('');
                 this._commitNode(textNode);
                 // When setting text content, for security purposes it matters a lot
                 // what the parent is. For example, <style> and <script> need to be
@@ -1049,7 +975,7 @@ class ChildPart {
                 kind: 'template updating',
                 template,
                 instance: this._$committedValue,
-                parts: this._$committedValue._parts,
+                parts: this._$committedValue._$parts,
                 options: this.options,
                 values,
             });
@@ -1062,7 +988,7 @@ class ChildPart {
                 kind: 'template instantiated',
                 template,
                 instance,
-                parts: instance._parts,
+                parts: instance._$parts,
                 options: this.options,
                 fragment,
                 values,
@@ -1072,7 +998,7 @@ class ChildPart {
                 kind: 'template instantiated and updated',
                 template,
                 instance,
-                parts: instance._parts,
+                parts: instance._$parts,
                 options: this.options,
                 fragment,
                 values,
@@ -1451,11 +1377,10 @@ export const _$LH = {
     _markerMatch: markerMatch,
     _HTML_RESULT: HTML_RESULT,
     _getTemplateHtml: getTemplateHtml,
-    // Used in hydrate
+    // Used in tests and private-ssr-support
     _TemplateInstance: TemplateInstance,
     _isIterable: isIterable,
     _resolveDirective: resolveDirective,
-    // Used in tests and private-ssr-support
     _ChildPart: ChildPart,
     _AttributePart: AttributePart,
     _BooleanAttributePart: BooleanAttributePart,
@@ -1470,9 +1395,81 @@ const polyfillSupport = DEV_MODE
 polyfillSupport === null || polyfillSupport === void 0 ? void 0 : polyfillSupport(Template, ChildPart);
 // IMPORTANT: do not change the property name or the assignment expression.
 // This line will be used in regexes to search for lit-html usage.
-((_d = global.litHtmlVersions) !== null && _d !== void 0 ? _d : (global.litHtmlVersions = [])).push('2.3.0');
+((_d = global.litHtmlVersions) !== null && _d !== void 0 ? _d : (global.litHtmlVersions = [])).push('2.7.2');
 if (DEV_MODE && global.litHtmlVersions.length > 1) {
     issueWarning('multiple-versions', `Multiple versions of Lit loaded. ` +
         `Loading multiple versions is not recommended.`);
+}
+/**
+ * Renders a value, usually a lit-html TemplateResult, to the container.
+ *
+ * This example renders the text "Hello, Zoe!" inside a paragraph tag, appending
+ * it to the container `document.body`.
+ *
+ * ```js
+ * import {html, render} from 'lit';
+ *
+ * const name = "Zoe";
+ * render(html`<p>Hello, ${name}!</p>`, document.body);
+ * ```
+ *
+ * @param value Any [renderable
+ *   value](https://lit.dev/docs/templates/expressions/#child-expressions),
+ *   typically a {@linkcode TemplateResult} created by evaluating a template tag
+ *   like {@linkcode html} or {@linkcode svg}.
+ * @param container A DOM container to render to. The first render will append
+ *   the rendered value to the container, and subsequent renders will
+ *   efficiently update the rendered value if the same result type was
+ *   previously rendered there.
+ * @param options See {@linkcode RenderOptions} for options documentation.
+ * @see
+ * {@link https://lit.dev/docs/libraries/standalone-templates/#rendering-lit-html-templates| Rendering Lit HTML Templates}
+ */
+export const render = (value, container, options) => {
+    var _a, _b;
+    if (DEV_MODE && container == null) {
+        // Give a clearer error message than
+        //     Uncaught TypeError: Cannot read properties of null (reading
+        //     '_$litPart$')
+        // which reads like an internal Lit error.
+        throw new TypeError(`The container to render into may not be ${container}`);
+    }
+    const renderId = DEV_MODE ? debugLogRenderId++ : 0;
+    const partOwnerNode = (_a = options === null || options === void 0 ? void 0 : options.renderBefore) !== null && _a !== void 0 ? _a : container;
+    // This property needs to remain unminified.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let part = partOwnerNode['_$litPart$'];
+    debugLogEvent === null || debugLogEvent === void 0 ? void 0 : debugLogEvent({
+        kind: 'begin render',
+        id: renderId,
+        value,
+        container,
+        options,
+        part,
+    });
+    if (part === undefined) {
+        const endNode = (_b = options === null || options === void 0 ? void 0 : options.renderBefore) !== null && _b !== void 0 ? _b : null;
+        // This property needs to remain unminified.
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        partOwnerNode['_$litPart$'] = part = new ChildPart(container.insertBefore(createMarker(), endNode), endNode, undefined, options !== null && options !== void 0 ? options : {});
+    }
+    part._$setValue(value);
+    debugLogEvent === null || debugLogEvent === void 0 ? void 0 : debugLogEvent({
+        kind: 'end render',
+        id: renderId,
+        value,
+        container,
+        options,
+        part,
+    });
+    return part;
+};
+if (ENABLE_EXTRA_SECURITY_HOOKS) {
+    render.setSanitizer = setSanitizer;
+    render.createSanitizer = createSanitizer;
+    if (DEV_MODE) {
+        render._testOnlyClearSanitizerFactoryDoNotCallOrElse =
+            _testOnlyClearSanitizerFactoryDoNotCallOrElse;
+    }
 }
 //# sourceMappingURL=lit-html.js.map
